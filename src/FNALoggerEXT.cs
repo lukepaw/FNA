@@ -117,7 +117,7 @@ namespace Microsoft.Xna.Framework
 			 * See the CoreCLR source for more info.
 			 * -flibit
 			 */
-#if NETSTANDARD2_0
+#if NET5_0
 			/* Modern C# lets you just send the byte*, nice! */
 			string result = System.Text.Encoding.UTF8.GetString(
 				(byte*) s,
