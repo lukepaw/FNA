@@ -264,7 +264,9 @@
 		<Compile Include="lib\Theorafile\csharp\Theorafile.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="app.config" />
+    <EmbeddedResource Include="dllmap.config">
+      <LogicalName>dllmap.config</LogicalName>
+    </EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="src\Graphics\Effect\StockEffects\FXB\AlphaTestEffect.fxb">
