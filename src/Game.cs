@@ -91,11 +91,7 @@ namespace Microsoft.Xna.Framework
 			}
 		}
 
-		public bool IsFixedTimeStep
-		{
-			get;
-			set;
-		}
+		// LUKE: Removed IsFixedTimeStep
 
 		private bool INTERNAL_isMouseVisible;
 		public bool IsMouseVisible
@@ -172,12 +168,9 @@ namespace Microsoft.Xna.Framework
 
 		private readonly GameTime gameTime;
 		private Stopwatch gameTimer;
-		private TimeSpan accumulatedElapsedTime;
 		private long previousTicks = 0;
-		private int updateFrameLag;
-		private bool forceElapsedTimeToZero = false;
 
-		private static readonly TimeSpan MaxElapsedTime = TimeSpan.FromMilliseconds(500);
+		// LUKE: Removed MaxElapsedTime
 
 		private bool[] textInputControlDown;
 		private int[] textInputControlRepeat;
@@ -204,7 +197,6 @@ namespace Microsoft.Xna.Framework
 			Services = new GameServiceContainer();
 		
 			IsMouseVisible = false;
-			IsFixedTimeStep = true;
 			TargetElapsedTime = TimeSpan.FromTicks(166667); // 60fps
 			InactiveSleepTime = TimeSpan.FromSeconds(0.02);
 
@@ -300,19 +292,6 @@ namespace Microsoft.Xna.Framework
 			suppressDraw = true;
 		}
 
-		public void ResetElapsedTime()
-		{
-			/* This only matters the next tick, and ONLY when
-			 * IsFixedTimeStep is false!
-			 * For fixed timestep, this is totally ignored.
-			 * -flibit
-			 */
-			if (!IsFixedTimeStep)
-			{
-				forceElapsedTimeToZero = true;
-			}
-		}
-
 		public void SuppressDraw()
 		{
 			suppressDraw = true;
@@ -365,111 +344,18 @@ namespace Microsoft.Xna.Framework
 			 * modes across multiple devices and platforms.
 			 */
 
-		RetryTick:
-
 			// Advance the accumulated elapsed time.
 			long currentTicks = gameTimer.Elapsed.Ticks;
-			accumulatedElapsedTime += TimeSpan.FromTicks(currentTicks - previousTicks);
+			TimeSpan elapsedTime = TimeSpan.FromTicks(currentTicks - previousTicks);
 			previousTicks = currentTicks;
 
-			/* If we're in the fixed timestep mode and not enough time has elapsed
-			 * to perform an update we sleep off the the remaining time to save battery
-			 * life and/or release CPU time to other threads and processes.
-			 */
-			if (IsFixedTimeStep && accumulatedElapsedTime < TargetElapsedTime)
-			{
-				int sleepTime = (
-					(int) (TargetElapsedTime - accumulatedElapsedTime).TotalMilliseconds
-				);
+			// LUKE: Removed MaxElapsedTime
 
-				/* NOTE: While sleep can be inaccurate in general it is
-				 * accurate enough for frame limiting purposes if some
-				 * fluctuation is an acceptable result.
-				 */
-				System.Threading.Thread.Sleep(sleepTime);
+			gameTime.ElapsedGameTime = elapsedTime;
+			gameTime.TotalGameTime += elapsedTime;
 
-				goto RetryTick;
-			}
-
-			// Do not allow any update to take longer than our maximum.
-			if (accumulatedElapsedTime > MaxElapsedTime)
-			{
-				accumulatedElapsedTime = MaxElapsedTime;
-			}
-
-			if (IsFixedTimeStep)
-			{
-				gameTime.ElapsedGameTime = TargetElapsedTime;
-				int stepCount = 0;
-
-				// Perform as many full fixed length time steps as we can.
-				while (accumulatedElapsedTime >= TargetElapsedTime)
-				{
-					gameTime.TotalGameTime += TargetElapsedTime;
-					accumulatedElapsedTime -= TargetElapsedTime;
-					stepCount += 1;
-
-					AssertNotDisposed();
-					Update(gameTime);
-				}
-
-				// Every update after the first accumulates lag
-				updateFrameLag += Math.Max(0, stepCount - 1);
-
-				/* If we think we are running slowly, wait
-				 * until the lag clears before resetting it
-				 */
-				if (gameTime.IsRunningSlowly)
-				{
-					if (updateFrameLag == 0)
-					{
-						gameTime.IsRunningSlowly = false;
-					}
-				}
-				else if (updateFrameLag >= 5)
-				{
-					/* If we lag more than 5 frames,
-					 * start thinking we are running slowly.
-					 */
-					gameTime.IsRunningSlowly = true;
-				}
-
-				/* Every time we just do one update and one draw,
-				 * then we are not running slowly, so decrease the lag.
-				 */
-				if (stepCount == 1 && updateFrameLag > 0)
-				{
-					updateFrameLag -= 1;
-				}
-
-				/* Draw needs to know the total elapsed time
-				 * that occured for the fixed length updates.
-				 */
-				gameTime.ElapsedGameTime = TimeSpan.FromTicks(TargetElapsedTime.Ticks * stepCount);
-			}
-			else
-			{
-				// Perform a single variable length update.
-				if (forceElapsedTimeToZero)
-				{
-					/* When ResetElapsedTime is called,
-					 * Elapsed is forced to zero and
-					 * Total is ignored entirely.
-					 * -flibit
-					 */
-					gameTime.ElapsedGameTime = TimeSpan.Zero;
-					forceElapsedTimeToZero = false;
-				}
-				else
-				{
-					gameTime.ElapsedGameTime = accumulatedElapsedTime;
-					gameTime.TotalGameTime += gameTime.ElapsedGameTime;
-				}
-
-				accumulatedElapsedTime = TimeSpan.Zero;
-				AssertNotDisposed();
-				Update(gameTime);
-			}
+			AssertNotDisposed();
+			Update(gameTime);
 
 			// Draw unless the update suppressed it.
 			if (suppressDraw)

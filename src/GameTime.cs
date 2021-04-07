@@ -20,19 +20,13 @@ namespace Microsoft.Xna.Framework
 		public TimeSpan TotalGameTime
 		{
 			get;
-			internal set;
+			set;
 		}
 
 		public TimeSpan ElapsedGameTime
 		{
 			get;
-			internal set;
-		}
-
-		public bool IsRunningSlowly
-		{
-			get;
-			internal set;
+			set;
 		}
 
 		#endregion
@@ -43,21 +37,12 @@ namespace Microsoft.Xna.Framework
 		{
 			TotalGameTime = TimeSpan.Zero;
 			ElapsedGameTime = TimeSpan.Zero;
-			IsRunningSlowly = false;
 		}
 
 		public GameTime(TimeSpan totalGameTime, TimeSpan elapsedGameTime)
 		{
 			TotalGameTime = totalGameTime;
 			ElapsedGameTime = elapsedGameTime;
-			IsRunningSlowly = false;
-		}
-
-		public GameTime(TimeSpan totalRealTime, TimeSpan elapsedRealTime, bool isRunningSlowly)
-		{
-			TotalGameTime = totalRealTime;
-			ElapsedGameTime = elapsedRealTime;
-			IsRunningSlowly = isRunningSlowly;
 		}
 
 		#endregion
